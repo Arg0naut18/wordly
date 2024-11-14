@@ -24,6 +24,19 @@ async function drawBoxes(canvas: Canvas, colors: Array<string>, texts: Array<str
 
 export async function playWordle(interaction: ChatInputCommandInteraction<CacheType>): Promise<void> {
     await interaction.deferReply({ephemeral: true});
+    const allowed_words = await fetch("wordle_words.txt").then(async response => {
+        let words = await response.text();
+        return words.split(",");
+    }, response => {
+        console.error(response);
+        return;
+    }).catch(e => {
+        console.error(e);
+        return;
+    });
+    if(allowed_words===undefined) {
+        return;
+    }
     const user = interaction.user;
     const channel = await interaction.channel?.fetch();
     if(!channel || !(channel instanceof TextChannel)) {
@@ -42,8 +55,8 @@ export async function playWordle(interaction: ChatInputCommandInteraction<CacheT
     const boxWidth = (canvasWidth - (padding * (boxCount + 1))) / boxCount;
     const canvas: Canvas = createCanvas(canvasWidth, canvasHeight);
     for (let index = 0; index < 6; index++) {
-        const filter = (response: Message) => response.author.id === user.id && response.content.length===5;
-        let input = await channel.awaitMessages({ filter: filter, max: 1, time: 60000, dispose: true});
+        const filter = (response: Message) => response.author.id === user.id && response.content.length===5 && allowed_words.includes(response.content);
+        let input = await channel.awaitMessages({ filter: filter, max: 1, time: 600000, dispose: true});
         if(input===undefined) {
             interaction.editReply(`${user.displayName} did not play entirely!`);
             return;
