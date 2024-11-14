@@ -10,12 +10,15 @@
   },
   "devDependencies": {
     "@types/node": "^22.9.0",
-    "tsx": "^4.19.2"
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
   },
   "type": "module",
   "dependencies": {
     "@napi-rs/canvas": "^0.1.61",
     "discord.js": "^14.16.3",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
   }
 }
