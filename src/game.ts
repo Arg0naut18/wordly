@@ -3,7 +3,7 @@ import { getAnswer } from "./answer.js";
 export class Game {
     chances: number;
     guessed: boolean;
-    private _answer: string;
+    _answer: string;
     private _alphas: Array<number>;
 
     constructor() {
@@ -12,7 +12,7 @@ export class Game {
         this._answer = "";
         this._alphas = Array(26).fill(0);
     }
-    
+
     async start() {
         this._answer = await getAnswer();
         for(let i=0; i<this._answer.length; i++) {

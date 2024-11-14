@@ -63,6 +63,7 @@ export async function playWordle(interaction) {
         }
     }
     if (game.chances === 0 || !game.guessed) {
+        interaction.editReply(`The answer was ${game._answer}`);
         channel.send(`${user.displayName} could not find the word. Better luck next time!`);
     }
 }
