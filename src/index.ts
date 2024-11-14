@@ -2,16 +2,18 @@ import 'dotenv/config';
 import { Client, GatewayIntentBits, Routes } from 'discord.js';
 import { REST } from '@discordjs/rest';
 import { handleInteraction } from './interactions.js';
+import { createServer, IncomingMessage, ServerResponse } from 'http';
 
 
 const TOKEN: string = process.env.WORDLY_TOKEN?process.env.WORDLY_TOKEN.toString():'';
 const CLIENT_ID: string = process.env.DISCORD_CLIENT_ID?process.env.DISCORD_CLIENT_ID.toString():'';
+const PORT = 5069;
 
 const client = new Client({
     intents: [
-        GatewayIntentBits.Guilds, 
-        GatewayIntentBits.GuildMessages, 
-        GatewayIntentBits.GuildMembers, 
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildMembers,
         GatewayIntentBits.MessageContent
     ],
 })
@@ -49,3 +51,8 @@ async function main() {
 }
 
 main();
+
+const server = createServer((request: IncomingMessage, response: ServerResponse) => {
+  response.end('Hello world!');
+});
+server.listen(PORT);
