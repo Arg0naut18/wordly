@@ -45,17 +45,17 @@ export async function playWordle(interaction: ChatInputCommandInteraction<CacheT
         const filter = (response: Message) => response.author.id === user.id && response.content.length===5;
         let input = await channel.awaitMessages({ filter: filter, max: 1, time: 60000, dispose: true});
         if(input===undefined) {
-            interaction.editReply(`${interaction.user.tag} did not play entirely!`);
+            interaction.editReply(`${user.displayName} did not play entirely!`);
             return;
         }
         if(input.first()===undefined) {
-            interaction.editReply(`${interaction.user.tag} did not play entirely!`);
+            interaction.editReply(`${user.displayName} did not play entirely!`);
             return;
         }
         const guess: string | undefined = input.first()?.content;
         await input.first()?.delete();
         if(guess===undefined) {
-            interaction.editReply(`${interaction.user.tag} did not play entirely!`);
+            interaction.editReply(`${user.displayName} did not play entirely!`);
             return;
         }
         let texts = Array.from(guess, (char: string) => char.toUpperCase());
@@ -65,11 +65,11 @@ export async function playWordle(interaction: ChatInputCommandInteraction<CacheT
         interaction.editReply({ files: [attachment] });
         
         if(game.guessed) {
-            channel.send(`${user.username} found the word in ${6-game.chances} guesses.`);
+            channel.send(`${user.displayName} found the word in ${6-game.chances} guesses.`);
             return;
         }
     }
     if(game.chances===0 || !game.guessed) {
-        channel.send(`${user.username} could not find the word. Better luck next time!`);
+        channel.send(`${user.displayName} could not find the word. Better luck next time!`);
     }
 }

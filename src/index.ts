@@ -4,8 +4,8 @@ import { REST } from '@discordjs/rest';
 import { handleInteraction } from './interactions.js';
 
 
-const TOKEN: string = process.env.WORDLY_TOKEN?process.env.WORDLY_TOKEN:'';
-const CLIENT_ID: string = process.env.DISCORD_CLIENT_ID?process.env.DISCORD_CLIENT_ID:'';
+const TOKEN: string = process.env.WORDLY_TOKEN?process.env.WORDLY_TOKEN.toString():'';
+const CLIENT_ID: string = process.env.DISCORD_CLIENT_ID?process.env.DISCORD_CLIENT_ID.toString():'';
 
 const client = new Client({
     intents: [
