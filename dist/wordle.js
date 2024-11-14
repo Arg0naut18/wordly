@@ -13,7 +13,7 @@ async function drawBoxes(canvas, colors, texts, row, padding, rowPadding, boxWid
         // Draw rectangle with specified color
         ctx.fillStyle = color;
         ctx.fillRect(x, y, boxWidth, boxHeight);
-        ctx.fillStyle = "#ffffff";
+        ctx.fillStyle = "#000000";
         ctx.fillText(texts[index], x + boxWidth / 2, y + boxHeight / 2);
     });
     return new AttachmentBuilder(await canvas.encode('png'), { 'name': 'boxes.png' });

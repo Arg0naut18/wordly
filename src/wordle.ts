@@ -16,7 +16,7 @@ async function drawBoxes(canvas: Canvas, colors: Array<string>, texts: Array<str
         ctx.fillStyle = color;
         ctx.fillRect(x, y, boxWidth, boxHeight);
 
-        ctx.fillStyle = "#ffffff";
+        ctx.fillStyle = "#000000";
         ctx.fillText(texts[index], x + boxWidth / 2, y + boxHeight / 2);
     });
     return new AttachmentBuilder(await canvas.encode('png'), {'name': 'boxes.png'});
@@ -33,7 +33,7 @@ export async function playWordle(interaction: ChatInputCommandInteraction<CacheT
     }
     const game = new Game();
     await game.start();
-    
+
     const canvasWidth = 500;
     const canvasHeight = 700;
     const boxCount = 5;
@@ -60,10 +60,10 @@ export async function playWordle(interaction: ChatInputCommandInteraction<CacheT
         }
         let texts = Array.from(guess, (char: string) => char.toUpperCase());
         let colors: Array<string> = await game.guess(guess);
-        
+
         const attachment: AttachmentBuilder = await drawBoxes(canvas, colors, texts, index, padding, 20, boxWidth, boxHeight);
         interaction.editReply({ files: [attachment] });
-        
+
         if(game.guessed) {
             channel.send(`${user.displayName} found the word in ${6-game.chances} guesses.`);
             return;
