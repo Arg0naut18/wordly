@@ -20,6 +20,18 @@ async function drawBoxes(canvas: Canvas, colors: Array<string>, texts: Array<str
         ctx.fillStyle = "#000000";
         ctx.fillText(texts[index], x + boxWidth / 2, y + boxHeight / 2);
     });
+    return new AttachmentBuilder(await canvas.encode('png'), {'name': 'box.png'});
+}
+
+async function initCanvas(canvas: Canvas, padding: number, rowPadding: number, boxWidth: number, boxHeight: number) {
+    const ctx: SKRSContext2D = canvas.getContext('2d');
+    for(let i=0; i<6; i++) {
+        for (let j=0; j<5; j++) {
+            const x = padding + j * (boxWidth + padding);
+            const y = i * (boxHeight + rowPadding);
+            ctx.fillRect(x, y, boxWidth, boxHeight);
+        }
+    }
     return new AttachmentBuilder(await canvas.encode('png'), {'name': 'boxes.png'});
 }
 
@@ -43,6 +55,16 @@ function isValidWord(arr: Array<string>, elem: string, n: number): boolean {
     return false;
 }
 
+function getAvailableChars(unavailable_words: Array<number>): Array<string> {
+    let availableWords = [];
+    for(let i=0; i<26; i++) {
+        if(unavailable_words[i]==0) {
+            availableWords.push(String.fromCharCode(i+65));
+        }
+    }
+    return availableWords;
+}
+
 export async function playWordle(interaction: ChatInputCommandInteraction<CacheType>, allowed_words: Array<string>): Promise<void> {
     await interaction.deferReply({ephemeral: true});
     const wordLen = allowed_words.length;
@@ -59,36 +81,37 @@ export async function playWordle(interaction: ChatInputCommandInteraction<CacheT
     }
     const game = new Game();
     await game.start();
+    let unavailable_words = Array(26).fill(0);
 
-    const canvasWidth = 500;
+    const canvasWidth = 550;
     const canvasHeight = 700;
     const boxCount = 5;
     const padding = 10;
+    const rowPadding = 20;
     const boxHeight = 100;
     const boxWidth = (canvasWidth - (padding * (boxCount + 1))) / boxCount;
+
     const canvas: Canvas = createCanvas(canvasWidth, canvasHeight);
+    interaction.editReply({files: [await initCanvas(canvas, padding, rowPadding, boxWidth, boxHeight)]});
+
     for (let index = 0; index < 6; index++) {
         const filter = (response: Message): boolean => response.author.id === user.id && response.content.length===5 && isValidWord(allowed_words, response.content, wordLen);
-        let input = await channel.awaitMessages({ filter: filter, max: 1, time: 600000, dispose: true});
-        if(input===undefined) {
-            interaction.editReply(`${user.displayName} did not play entirely!`);
-            return;
-        }
-        if(input.first()===undefined) {
-            interaction.editReply(`${user.displayName} did not play entirely!`);
-            return;
-        }
-        const guess: string | undefined = input.first()?.content;
-        await input.first()?.delete();
+        const input = await channel.awaitMessages({ filter: filter, max: 1, time: 600000, dispose: true});
+        const guess: string | undefined = input?.first()?.content;
+        await input?.first()?.delete();
         if(guess===undefined) {
             interaction.editReply(`${user.displayName} did not play entirely!`);
             return;
         }
-        let texts = Array.from(guess, (char: string) => char.toUpperCase());
+        let texts = Array.from(guess, (char: string) => {
+            char = char.toUpperCase();
+            unavailable_words[char.charCodeAt(0)-65]++;
+            return char;
+        });
         let colors: Array<string> = await game.guess(guess);
+        const attachment: AttachmentBuilder = await drawBoxes(canvas, colors, texts, index, padding, rowPadding, boxWidth, boxHeight);
 
-        const attachment: AttachmentBuilder = await drawBoxes(canvas, colors, texts, index, padding, 20, boxWidth, boxHeight);
-        interaction.editReply({ files: [attachment] });
+        interaction.editReply({ files: [attachment], content: `Chars left:\n${getAvailableChars(unavailable_words).join(",")}`});
 
         if(game.guessed) {
             channel.send(`${user.displayName} found the word in ${6-game.chances} guesses.`);
