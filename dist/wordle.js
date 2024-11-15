@@ -18,19 +18,31 @@ async function drawBoxes(canvas, colors, texts, row, padding, rowPadding, boxWid
     });
     return new AttachmentBuilder(await canvas.encode('png'), { 'name': 'boxes.png' });
 }
-export async function playWordle(interaction) {
+function isValidWord(arr, elem, n) {
+    elem = elem.toLowerCase();
+    let low = 0;
+    let high = n - 1;
+    let mid = 0;
+    while (low <= high) {
+        mid = (low + high) >> 1;
+        let compVal = arr[mid].localeCompare(elem);
+        if (compVal < 0) {
+            low = mid + 1;
+        }
+        else if (compVal > 0) {
+            high = mid - 1;
+        }
+        else {
+            return true;
+        }
+    }
+    return false;
+}
+export async function playWordle(interaction, allowed_words) {
     await interaction.deferReply({ ephemeral: true });
-    const allowed_words = await fetch("wordle_words.txt").then(async (response) => {
-        let words = await response.text();
-        return words.split(",");
-    }, response => {
-        console.error(response);
-        return;
-    }).catch(e => {
-        console.error(e);
-        return;
-    });
-    if (allowed_words === undefined) {
+    const wordLen = allowed_words.length;
+    console.log(`Loaded ${wordLen} words.`);
+    if (wordLen === 0) {
         return;
     }
     const user = interaction.user;
@@ -50,7 +62,7 @@ export async function playWordle(interaction) {
     const boxWidth = (canvasWidth - (padding * (boxCount + 1))) / boxCount;
     const canvas = createCanvas(canvasWidth, canvasHeight);
     for (let index = 0; index < 6; index++) {
-        const filter = (response) => response.author.id === user.id && response.content.length === 5 && allowed_words.includes(response.content);
+        const filter = (response) => response.author.id === user.id && response.content.length === 5 && isValidWord(allowed_words, response.content, wordLen);
         let input = await channel.awaitMessages({ filter: filter, max: 1, time: 600000, dispose: true });
         if (input === undefined) {
             interaction.editReply(`${user.displayName} did not play entirely!`);

@@ -2,6 +2,7 @@ import { CacheType, ChatInputCommandInteraction, AttachmentBuilder, Message, Tex
 import { createCanvas, Canvas, SKRSContext2D } from '@napi-rs/canvas';
 import { Game } from "./game.js";
 
+
 async function drawBoxes(canvas: Canvas, colors: Array<string>, texts: Array<string>, row: number, padding: number, rowPadding: number, boxWidth: number, boxHeight: number) {
     const ctx: SKRSContext2D = canvas.getContext('2d');
     ctx.font = '20px Arial';
@@ -22,19 +23,31 @@ async function drawBoxes(canvas: Canvas, colors: Array<string>, texts: Array<str
     return new AttachmentBuilder(await canvas.encode('png'), {'name': 'boxes.png'});
 }
 
-export async function playWordle(interaction: ChatInputCommandInteraction<CacheType>): Promise<void> {
+function isValidWord(arr: Array<string>, elem: string, n: number): boolean {
+    elem = elem.toLowerCase();
+    let low = 0;
+    let high = n-1;
+    let mid = 0;
+
+    while(low<=high) {
+        mid = (low+high)>>1;
+        let compVal = arr[mid].localeCompare(elem);
+        if(compVal<0) {
+            low = mid+1;
+        } else if(compVal>0) {
+            high = mid-1;
+        } else {
+            return true;
+        }
+    }
+    return false;
+}
+
+export async function playWordle(interaction: ChatInputCommandInteraction<CacheType>, allowed_words: Array<string>): Promise<void> {
     await interaction.deferReply({ephemeral: true});
-    const allowed_words = await fetch("wordle_words.txt").then(async response => {
-        let words = await response.text();
-        return words.split(",");
-    }, response => {
-        console.error(response);
-        return;
-    }).catch(e => {
-        console.error(e);
-        return;
-    });
-    if(allowed_words===undefined) {
+    const wordLen = allowed_words.length;
+    console.log(`Loaded ${wordLen} words.`);
+    if(wordLen===0) {
         return;
     }
     const user = interaction.user;
@@ -55,7 +68,7 @@ export async function playWordle(interaction: ChatInputCommandInteraction<CacheT
     const boxWidth = (canvasWidth - (padding * (boxCount + 1))) / boxCount;
     const canvas: Canvas = createCanvas(canvasWidth, canvasHeight);
     for (let index = 0; index < 6; index++) {
-        const filter = (response: Message) => response.author.id === user.id && response.content.length===5 && allowed_words.includes(response.content);
+        const filter = (response: Message): boolean => response.author.id === user.id && response.content.length===5 && isValidWord(allowed_words, response.content, wordLen);
         let input = await channel.awaitMessages({ filter: filter, max: 1, time: 600000, dispose: true});
         if(input===undefined) {
             interaction.editReply(`${user.displayName} did not play entirely!`);
